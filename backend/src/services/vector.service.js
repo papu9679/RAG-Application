@@ -1,132 +1,137 @@
-// 1.
-// npm install @pinecone-database/pinecone
+import { pinecone, pineconeIndex } from "../config/pinecone.js";
 
-// 2.
-// npm install @pinecone-database/pinecone --legacy-peer-deps
+let cachedIndexInfo = null;
 
-// import { Pinecone } from "@pinecone-database/pinecone";
-import { pineconeIndex as index } from '../config/pinecone.js';
+export const getIndexInfo = async () => {
+  if (cachedIndexInfo) return cachedIndexInfo;
 
-// // 1. Setting up client
-// const pinecone = new Pinecone({
-//   apiKey: process.env.PINECONE_API_KEY,
-// });
+  try {
+    const host = process.env.PINECONE_INDEX_HOST || "";
+    const list = await pinecone.listIndexes();
+    const matched = list.indexes?.find(
+      (idx) => host.includes(idx.host) || (idx.name && host.includes(idx.name))
+    );
 
-// // 2. host
-// const index = pinecone.index({
-//   host: process.env.PINECONE_INDEX_HOST,
-// });
+    if (matched?.schema) {
+      const hasDenseEmbedding = Boolean(matched.schema.fields?.embedding);
+      const chunkTextField = matched.schema.fields?.chunk_text;
+      const hasIntegratedEmbed = Boolean(chunkTextField?.embed);
 
-// export const storeVectors = async ({
-// 	documentId,
-// 	fileName,
-// 	chunks,
-// 	embeddings,
-// }) => {
-// 	if (chunks.length !== embeddings.length) {
-// 		throw new Error('Chunks and embeddings count mismatch');
-// 	}
+      cachedIndexInfo = {
+        indexName: matched.name,
+        hasDocumentSchema: true,
+        hasDenseEmbedding,
+        hasIntegratedEmbed,
+        denseFieldName: hasDenseEmbedding ? "embedding" : null,
+        textFieldName: hasIntegratedEmbed ? "chunk_text" : "text",
+        dimension:
+          matched.schema.fields?.embedding?.dimension ||
+          chunkTextField?.embed?.dimension ||
+          768,
+      };
+      return cachedIndexInfo;
+    }
 
-// 	// 1. Prepare vector records
-// 	const documents = chunks.map((chunk, i) => ({
-// 		_id: `${documentId}-${i}`,
-// 		values: embeddings[i],
-// 		chunk_text: chunk,
-// 		documentId,
-// 		fileName,
-// 		chunkIndex: i,
-// 	}));
-
-// 	// Using vectors
-// 	// const vectors = chunks.map((chunk, i) => ({
-// 	// 	id: `${documentId}-${i}`,
-// 	// 	values: embeddings[i],
-// 	// 	metadata: {
-// 	// 		documentId,
-// 	// 		fileName,
-// 	// 		chunkIndex: i,
-// 	// 		text: chunk,
-// 	// 	},
-// 	// }));
-
-// 	const BATCH_SIZE = 100;
-
-// 	for (let i = 0; i < documents.length; i += BATCH_SIZE) {
-// 		const batch = documents.slice(i, i + BATCH_SIZE);
-
-// 		await index.documents.upsert({
-// 			documents: batch,
-// 		});
-// 	}
-
-// 	return {
-// 		storedCount: documents.length,
-// 	};
-// };
-
-export const storeVectors = async ({
-	documentId,
-	fileName,
-	chunks,
-	embeddings,
-}) => {
-	if (!chunks?.length || !embeddings?.length) {
-		throw new Error('Chunks and embeddings are required');
-	}
-
-	if (chunks.length !== embeddings.length) {
-		throw new Error('Chunks and embeddings count mismatch');
-	}
-
-	const documents = chunks.map((chunk, i) => ({
-		_id: `${documentId}-${i}`,
-		text: chunk,
-		documentId,
-		fileName,
-		chunkIndex: i,
-	}));
-
-	const BATCH_SIZE = 100;
-
-	for (let i = 0; i < documents.length; i += BATCH_SIZE) {
-		const batch = documents.slice(i, i + BATCH_SIZE);
-
-		await index.documents.upsert({
-			documents: batch,
-		});
-	}
-
-	return {
-		storedCount: documents.length,
-	};
+    cachedIndexInfo = {
+      indexName: matched?.name,
+      hasDocumentSchema: false,
+      hasDenseEmbedding: false,
+      hasIntegratedEmbed: false,
+      dimension: matched?.dimension || 768,
+    };
+    return cachedIndexInfo;
+  } catch (error) {
+    console.warn(
+      "Could not inspect Pinecone index schema, defaulting to document schema with dense embedding:",
+      error.message
+    );
+    cachedIndexInfo = {
+      hasDocumentSchema: true,
+      hasDenseEmbedding: true,
+      hasIntegratedEmbed: false,
+      denseFieldName: "embedding",
+      textFieldName: "text",
+      dimension: 768,
+    };
+    return cachedIndexInfo;
+  }
 };
 
+export const storeVectors = async ({
+  documentId,
+  fileName,
+  chunks,
+  embeddings,
+}) => {
+  if (!chunks?.length || !embeddings?.length) {
+    throw new Error("Chunks and embeddings are required");
+  }
 
+  if (chunks.length !== embeddings.length) {
+    throw new Error("Chunks and embeddings count mismatch");
+  }
 
-/**	when I am using vectors it is giving this errors
- * Error: PineconeBadRequestError: This index has a document schema, so writes must go through the documents API. Use POST /namespaces/{namespace}/documents/upsert, /update or /delete with the X-Pinecone-API-Version header set to 2026-07 or later. The vectors and records write endpoints do not support document schemas. If you are using a client library or integration that only supports the vectors API, upgrade it to a version that supports the documents API.
-    at mapHttpStatusError (D:\GitHub Repository\RAG-MVP\backend\node_modules\@pinecone-database\pinecone\dist\errors\http.js:304:20)
-    at handleApiError (D:\GitHub Repository\RAG-MVP\backend\node_modules\@pinecone-database\pinecone\dist\errors\handling.js:17:46)
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async Object.post (D:\GitHub Repository\RAG-MVP\backend\node_modules\@pinecone-database\pinecone\dist\utils\middleware.js:148:29)
-    at async VectorOperationsApi.fetchApi (D:\GitHub Repository\RAG-MVP\backend\node_modules\@pinecone-database\pinecone\dist\pinecone-generated-ts-fetch\db_data\runtime.js:200:28)
-    at async VectorOperationsApi.request (D:\GitHub Repository\RAG-MVP\backend\node_modules\@pinecone-database\pinecone\dist\pinecone-generated-ts-fetch\db_data\runtime.js:113:26)
-    at async VectorOperationsApi.upsertVectorsRaw (D:\GitHub Repository\RAG-MVP\backend\node_modules\@pinecone-database\pinecone\dist\pinecone-generated-ts-fetch\db_data\apis\VectorOperationsApi.js:425:26)
-    at async VectorOperationsApi.upsertVectors (D:\GitHub Repository\RAG-MVP\backend\node_modules\@pinecone-database\pinecone\dist\pinecone-generated-ts-fetch\db_data\apis\VectorOperationsApi.js:439:26)
-    at async UpsertCommand.run (D:\GitHub Repository\RAG-MVP\backend\node_modules\@pinecone-database\pinecone\dist\data\vectors\upsert.js:30:9)
-    at async Index.upsert (D:\GitHub Repository\RAG-MVP\backend\node_modules\@pinecone-database\pinecone\dist\data\index.js:305:16) {
-  cause: undefined
-}
+  const info = await getIndexInfo();
+  const BATCH_SIZE = 100;
 
-//documents,
-	const documents = chunks.map((chunk, i) => ({
-		_id: `${documentId}-${i}`,
-		values: embeddings[i],
-		chunk_text: chunk,
-		documentId,
-		fileName,
-		chunkIndex: i,
-	}));
+  if (info.hasDocumentSchema) {
+    // Pinecone index with Document Schema (Documents API)
+    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+      const batchChunks = chunks.slice(i, i + BATCH_SIZE);
+      const batchEmbeddings = embeddings.slice(i, i + BATCH_SIZE);
 
-	* but when I chenge it to documents it woeking fine now
- */
+      const batch = batchChunks.map((chunk, idx) => {
+        const chunkIndex = i + idx;
+        const docRecord = {
+          _id: `${documentId}-${chunkIndex}`,
+          documentId,
+          fileName,
+          chunkIndex,
+        };
+
+        if (info.hasDenseEmbedding) {
+          docRecord.embedding = batchEmbeddings[idx];
+          docRecord.text = chunk;
+        } else if (info.hasIntegratedEmbed) {
+          docRecord.chunk_text = chunk;
+        } else {
+          docRecord.text = chunk;
+        }
+
+        return docRecord;
+      });
+
+      await pineconeIndex.documents.upsert({
+        documents: batch,
+      });
+    }
+  } else {
+    // Legacy vector index without document schema (Vectors API)
+    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+      const batchChunks = chunks.slice(i, i + BATCH_SIZE);
+      const batchEmbeddings = embeddings.slice(i, i + BATCH_SIZE);
+
+      const batch = batchChunks.map((chunk, idx) => {
+        const chunkIndex = i + idx;
+        return {
+          id: `${documentId}-${chunkIndex}`,
+          values: batchEmbeddings[idx],
+          metadata: {
+            documentId,
+            fileName,
+            chunkIndex,
+            text: chunk,
+          },
+        };
+      });
+
+      await pineconeIndex.upsert({
+        records: batch,
+      });
+    }
+  }
+
+  return {
+    storedCount: chunks.length,
+  };
+};
