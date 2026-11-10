@@ -37,8 +37,8 @@ function FileUpload({ onUpload, loading = false }) {
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
-        } catch {
-            setError("Failed to upload PDF");
+        } catch (err) {
+            setError(err.message || "Failed to upload PDF");
         }
     };
 
@@ -91,7 +91,6 @@ function FileUpload({ onUpload, loading = false }) {
                     className="hidden"
                 />
 
-                {/* Selected File */}
                 {/* Selected File */}
                 {selectedFile && (
                     <div className="mt-4 flex items-center justify-between gap-2 rounded-lg bg-violet-500/10 px-3 py-2">

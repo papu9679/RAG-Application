@@ -5,7 +5,7 @@ import ChatBox from './components/chat/ChatBox.jsx';
 import DocumentPanel from './components/documents/DocumentPanel.jsx';
 
 import { sendMessage } from './services/chat.service.js';
-import { uploadDocument } from './services/document.service.js';
+import { getDocuments, uploadDocument } from './services/document.service.js';
 
 const STORAGE_KEY = 'rag_uploaded_documents';
 
@@ -29,6 +29,25 @@ function App() {
 	useEffect(() => {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(documents));
 	}, [documents]);
+
+	// Sync documents with backend on mount
+	useEffect(() => {
+		const loadDocs = async () => {
+			try {
+				const remoteDocs = await getDocuments();
+				if (Array.isArray(remoteDocs) && remoteDocs.length > 0) {
+					setDocuments((prev) => {
+						const existingIds = new Set(prev.map((d) => d.id));
+						const newDocs = remoteDocs.filter((d) => !existingIds.has(d.id));
+						return [...prev, ...newDocs];
+					});
+				}
+			} catch (err) {
+				console.warn('Could not sync documents from server:', err);
+			}
+		};
+		loadDocs();
+	}, []);
 
 	// New Chat
 	const handleNewChat = () => {
@@ -94,13 +113,16 @@ function App() {
 				status: 'indexed',
 			};
 
-			setDocuments((prev) => [...prev, newDocument]);
+			setDocuments((prev) => {
+				const filtered = prev.filter((d) => d.id !== newDocument.id);
+				return [...filtered, newDocument];
+			});
 
 			toast.success('PDF uploaded successfully!', {
 				id: toastId,
 			});
 		} catch (error) {
-			toast.error('Failed to upload PDF', {
+			toast.error(error.message || 'Failed to upload PDF', {
 				id: toastId,
 			});
 
