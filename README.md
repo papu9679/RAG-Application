@@ -2,20 +2,6 @@
 
 An AI-powered PDF chatbot that lets users upload documents and ask questions in natural language. Built using **Retrieval-Augmented Generation (RAG)**, it retrieves relevant information from uploaded PDFs and generates context-aware responses using LLMs.
 
-<p align="center">
-  <a href="https://rag-mvp-phi.vercel.app/">
-    <strong>🚀 Live Demo</strong>
-  </a>
-  ·
-  <a href="https://github.com/Azmat2003/RAG-MVP">
-    <strong>📂 GitHub Repository</strong>
-  </a>
-  ·
-  <a href="https://app.notion.com/p/RAG-4034aaa4c84780f9a42ee91421587d6b?source=copy_link">
-    <strong>📖 Documentation & Learning Material</strong>
-  </a>
-</p>
-
 ---
 
 ## ✨ Features
@@ -209,9 +195,7 @@ The application is deployed using:
 - **Frontend:** Vercel
 - **Backend:** Configure the deployed backend URL through the frontend environment variable.
 
-Try the live application:
 
-👉 [https://rag-mvp-phi.vercel.app/](https://rag-mvp-phi.vercel.app/)
 
 ## 🎯 Key Learnings
 
@@ -224,17 +208,3 @@ Building this project involved working with several important concepts:
 - Connecting LLMs with retrieved contextual information.
 - Handling large document ingestion and embedding batches.
 - Building a modular full-stack application with React and Express.
-
-## 👨‍💻 Author
-
-**Azmat Matin Shadab**
-
-- GitHub: [@Azmat2003](https://github.com/Azmat2003)
-- Project: [RAG-MVP](https://github.com/Azmat2003/RAG-MVP)
-- Live Demo: [RAG-MVP](https://rag-mvp-phi.vercel.app/)
-
----
-
-\<p align="center">
-&#x20; Built with ❤️ using React, Node.js, LangChain, Gemini and Pinecone.
-\</p>
