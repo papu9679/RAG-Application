@@ -24,14 +24,31 @@ function ChatBox({ messages = [], onSendMessage, loading = false }) {
 								✦
 							</div>
 
-							<h2 className="bg-gradient-to-r from-blue-300 via-violet-300 to-purple-400 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl">
+							<h2 className="bg-linear-to-r from-blue-300 via-violet-300 to-purple-400 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl">
 								Chat with your documents
 							</h2>
 
-							<p className="max-w-md text-sm leading-relaxed text-slate-400">
+							<p className="max-w-md text-sm leading-relaxed text-slate-400 ">
 								Upload your PDFs and ask questions. Get AI-powered answers based
 								on your documents.
 							</p>
+							<ul className="list-none pl-0 mt-4 space-y-3 text-justify text-sm leading-relaxed text-slate-400">
+								<li>
+									<span className="font-semibold text-indigo-400">01.</span>{' '}
+									Upload your PDF document and wait a few moments while it is
+									being processed.
+								</li>
+								<li>
+									<span className="font-semibold text-indigo-400">02.</span>{' '}
+									Once uploaded, a popup notification will confirm that your PDF
+									was uploaded successfully.
+								</li>
+								<li>
+									<span className="font-semibold text-indigo-400">03.</span>{' '}
+									Start asking questions and get AI-powered answers based on
+									your PDF content.
+								</li>
+							</ul>
 						</div>
 					) : (
 						/* Conversation */
