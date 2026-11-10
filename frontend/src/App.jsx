@@ -133,7 +133,7 @@ function App() {
 	};
 
 	return (
-		<div className="flex h-dvh overflow-hidden bg-gradient-to-br from-[#080e23] via-[#171638] to-[#302052] text-slate-100">
+		<div className="flex h-dvh overflow-hidden bg-linear-to-br from-[#080e23] via-[#171638] to-[#302052] text-slate-100">
 			<Toaster
 				position="top-right"
 				toastOptions={{
