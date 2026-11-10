@@ -49,6 +49,12 @@ function ChatBox({ messages = [], onSendMessage, loading = false }) {
 									your PDF content.
 								</li>
 							</ul>
+							<p className="mt-6 text-center text-sm text-slate-400 italic">
+								Thank you for using my application! ❤️
+								<span className="block mt-1 font-semibold text-indigo-400 not-italic">
+									— Sayan.A
+								</span>
+							</p>
 						</div>
 					) : (
 						/* Conversation */
