@@ -48,12 +48,17 @@ function ChatBox({ messages = [], onSendMessage, loading = false }) {
 									Start asking questions and get AI-powered answers based on
 									your PDF content.
 								</li>
+								<li>
+									<span className="font-semibold text-indigo-400">04.</span>{' '}
+									Dont press the "+ New Chat" button it will reset the chat
+								</li>
 							</ul>
 							<p className="mt-6 text-center text-sm text-slate-400 italic">
 								Thank you for using my application! ❤️
 								<span className="block mt-1 font-semibold text-indigo-400 not-italic">
 									— Sayan.A
 								</span>
+								~ Still I am updating & working on this
 							</p>
 						</div>
 					) : (
